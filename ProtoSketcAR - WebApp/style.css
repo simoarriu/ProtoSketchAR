@@ -1,0 +1,322 @@
+/*Aspetto bottoni*/
+button {
+  appearance: none;
+  background: rgba(153, 135, 135, 0.267);
+  color: white;
+  border: 4px solid;
+  padding: 0.5em;
+  font-size: 1em;
+  border-radius: 2em;
+  user-select: none;
+  pointer-events: auto;
+  align-self: center;
+  margin: 5px;
+}
+
+/*Gestione overlay dom
+
+top: 0;*/
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1em;
+
+  display: flex;
+  flex-direction: column;
+  justify-items: flex-start;
+  align-items: flex-start;
+
+  /* Se decommento questo, non posso disegnare sulla canvas
+        pointer-events: none;*/
+  user-select: none;
+}
+
+/*Inizialmente i bottoni sono disattivati*/
+#ar-instructions,
+#inline-instructions,
+#sketch-instructions,
+#model-instructions,
+#stroke-color,
+#selection-instructions,
+#div-operations,
+#div-url{
+  display: none;
+}
+
+.overlay-content {
+  flex-grow: 1;
+}
+
+/* Quando body ha classe inline, mostra le istruzioni iniziali*/
+body.inline #inline-instructions {
+  display: contents;
+}
+
+/*Mostra i bottoni quando sei in "placing-cursor", ovvero quando sei entrato in AR*/
+body.placing-cursor #ar-instructions {
+  display: contents;
+}
+
+/*Canvas e bottoni vengono mostrati solo quando la classe sketching è attiva*/
+body.sketching #sketch-instructions {
+  display: contents;
+}
+
+body.selection #model-instructions {
+  display: contents;
+}
+
+
+body.strokecolor #stroke-color {
+  display: contents;
+}
+
+body.selectmode #selection-instructions {
+  display: contents;
+}
+
+body.edit-model #div-operations {
+  display: contents;
+}
+
+body.url_mode #div-url
+{
+  display: contents;
+}
+
+#container-mode {
+  margin: auto;
+}
+
+/*
+#div_canvas
+{
+    border: solid 4px white;
+    border-radius: 2em;
+  
+}
+*/
+
+
+
+/*definisco bordo e colore della canvas, con le dimensioni al 100%*/
+
+#source-canvas {
+
+  width: 100% !important;
+  height: 100% !important;	
+  
+  border: solid 4px white;
+  border-radius: 2em;
+  
+/*
+  position: relative;
+  right: 800px;*/
+  /*right: 1000px;*/
+			
+}
+
+
+/*fino a margin serve per centrare a schermo il div, gli ultimi 2 servono per adattare la dimensione del div in base allo schermo*/
+#container-sketch {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  margin-top:20%;
+  width: 90%;
+  height: 60%;
+}
+
+
+#container-model {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: 90%;
+  height: 80%;
+}
+
+#container-stroke {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
+
+/* centro i bottoni della canvas*/
+#div-buttons,
+#div-model-button,
+#div-undoredo,
+#div-color-picker,
+#div-slider,
+#div-hud,
+#div-url-button{
+  margin: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#container-url
+{
+  margin: auto;
+  
+}
+
+#div-name-url
+{ 
+  
+    margin: auto;
+    border: solid 4px white;
+    border-radius: 2em;
+    width: 90%;
+    /*height: 100%;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+  
+}
+
+#container-operations
+{
+    display: flex;
+    justify-content: flex-end;
+    align-self: stretch;
+}
+
+#div-sca-rot-del
+{
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    margin-bottom:5%;
+    visibility:hidden;
+}
+
+#div-reset-done
+{
+  
+  margin: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+#undo-button, #redo-button{
+  visibility:hidden;
+}
+
+/*canavs-container è una classe che viene creata in automatico da fabric,
+è necessario modificare manualmente i suoi attributi con !important*/
+.canvas-container {
+  margin: 0 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/*idem come sopra*/
+.upper-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#sel_model {
+  border: solid 4px white;
+  border-radius: 2em;
+
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+
+  overflow: scroll;
+}
+
+.div-url-text
+{
+
+  margin: 30px;
+  
+}
+
+.div-models
+{
+  border: solid 2px white;
+  border-radius: 2em;
+  margin: 30px;
+  height: 20%;
+
+  display: flex;
+  justify-content: space-between;
+  align-self: stretch;
+  
+}
+
+.models
+{
+  margin: 20px;
+}
+
+.h3_url
+{
+   margin: 10px;
+   display: flex;
+   align-content: center;
+   justify-content: center;
+   color: white;
+}
+
+.warning
+{
+   margin: 10px;
+   display: flex;
+   align-content: center;
+   justify-content: center;
+   color: red;
+   visibility:hidden;
+}
+
+textarea
+{
+    border: solid 2px white;
+    border-radius: 0.5em;
+    font-family: inherit;
+    font-size: 1.5em;
+    resize:none;
+    white-space: nowrap;
+    overflow-x: scroll; /* or hidden */
+    /*height: 35%;*/
+}
+
+h3,h2 {
+    margin: 20px;
+    align-self: center;
+    color: white;
+}
+
+h4
+{
+  margin: 10px;
+    align-self: center;
+    color: white;
+}
+
+
+/*html, body {
+
+    padding: 0;
+    margin: 0;
+}*/

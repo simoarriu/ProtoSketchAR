@@ -1,0 +1,754 @@
+<html lang="en">
+  <head>
+    <title>Custom - A-Frame</title>
+    <meta name="description" content="Custom - A-Frame"  />
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro"></script>
+    <script src="scripts/ar-components.js"></script>    
+    <script src="scripts/rotate_model.js"></script>
+    <script src="scripts/create_model.js"></script>
+    <script src="scripts/undo_redo.js"></script>
+    <script src="scripts/stroke_style.js"></script>
+    <script src="scripts/drawing.js"></script>
+    <script src="scripts/handler_button.js"></script>    
+    <script src="scripts/arrow.js"></script>
+    <script src="scripts/hammer.js"></script> 
+    <script src="scripts/operations.js"></script>    
+    <script src="scripts/classes.js"></script>   
+    <script src="scripts/tube.js"></script>   
+  
+  </head>
+  <!-- la classe inline mostra gli elementi nella prima schermata, in cui viene detto di entrare in modalità AR-->
+  <body class="inline">
+    <!-- Definisco la scena includendo il modulo AR webxr -->
+    <a-scene webxr="optionalFeatures: hit-test, dom-overlay; overlayElement:#overlay;">
+      
+      <!-- gestione asset -->
+      <a-assets id="assets">
+        <!-- I modelli sono caricati su github, per ottenerli qua su Aframe è necessario copiare il link "Raw", altrimenti non sono visualizzabili -->
+        <a-asset-item id="lamp" src="https://raw.githubusercontent.com/simoarriu/repo_model/main/TableLamp/scene.gltf"></a-asset-item>
+        <a-asset-item id="pot" src="https://raw.githubusercontent.com/simoarriu/repo_model/main/Pot/scene.gltf"></a-asset-item>
+        <a-asset-item id="chair" src="https://raw.githubusercontent.com/simoarriu/repo_model/main/RChair/scene.gltf"></a-asset-item>
+        <a-asset-item id="vase" src="https://raw.githubusercontent.com/simoarriu/repo_model/main/Vase/scene.gltf"></a-asset-item>
+      </a-assets>      
+      
+      <!-- il ring sarà l'entità che mi permette di selezionare un punto in cui creare uno sketch, per far ciò utilizzo la classe HitTest -->
+      <a-entity ar-hit-test="doHitTest:false" visible="false" scale="0.5 0.5 0.5">
+        <a-ring
+          rotation="-90 0 0"
+          color="teal"
+          radius-inner="0.06"
+          radius-outer="0.12"
+        ></a-ring>
+      </a-entity>
+
+      <a-camera id="camera">
+      </a-camera>
+    </a-scene>
+
+    <!-- Div che verrà mostrato a schermo, il primo con id ar-instruction contiene i due bottoni per
+   creare lo sketch ed uscire dalla modalità AR, mentre il secondo contiene gli elementi da visualizzare nella classe inline 
+    il terzo div contiene invece canvas e bottoni che verranno mostrati per disegnare lo sketch
+    il quarto sarà la pagina che permette all'utente di selezionare un modello da posizionare-->
+
+    <div id="overlay" class="container">
+      <div id="ar-instructions">
+        <div style="display: flex; justify-content: space-around; align-self: stretch;">
+          <button id="draw-button">Tap to sketch</button>
+          <button id="model-button">Import model</button>
+          <button id="operation-button">Edit model</button>
+          <button id="export_scene">Export Scene</button>
+          <button id="exit-button">Stop AR</button>
+        </div>
+      </div>
+      <div id="inline-instructions">
+        <h1>Welcome To ProtoSketchAR</h1>
+        <section class="overlay-content">
+          <p>Enter AR to Start Prototyping</p>
+        </section>
+      </div>
+      <div id="selection-instructions">
+        <div id="container-mode">
+          <button id="classic-button">Classic Mode</button>
+          <button id="pinned-button">Pinned Mode</button>
+        </div>
+      </div>
+      <div id="sketch-instructions">
+        <div id ="container-sketch">
+          <!--
+          <div id="div_canvas">
+            <canvas id="source-canvas"></canvas>
+          </div>
+          -->
+    
+            <canvas id="source-canvas"></canvas>
+
+          <div id="div-buttons">
+            <button id="done-button">Done</button>
+            <button id="rotate-button">Rotate: OFF</button>
+            <button id="stroke-button">Style</button>
+            <button id="cancel-button">Cancel</button>
+            <button id="back-button">Back</button>
+          </div>
+          <div id="div-undoredo">
+            <button id="undo-button">Undo</button>
+            <button id="redo-button">Redo</button>
+          </div>
+        </div>       
+      </div>
+      <div id="stroke-color">
+        <div id="container-stroke">
+          <div class="picker" id="picker"></div>
+          <div id="div-line-width" style="text-align: center;">
+            <h2>
+              Size: <input type="range" id="theLineWidth" min="1" max="15" value="5" title="Line width"> 
+            </h2>
+            <canvas id="stroke-canvas" style="width: 256px; height: 80px; border: solid 4px white; border-radius: 2em;"></canvas>
+          </div>    
+          <div id="div-color-picker">
+            <button id="done-picker-button">Done</button>
+          </div>
+        </div>        
+      </div>
+      <div id="model-instructions">
+        <div id="container-model">
+          <div id="sel_model">     
+        
+            <div class="div-models">
+              <h3>
+                Lamp
+              </h3>
+              <button class="models">Place</button>
+            </div>
+            
+            <div class="div-models">
+              <h3>
+                Pot
+              </h3>
+              <button class="models">Place</button>
+            </div>
+            
+            <div class="div-models">
+              <h3>
+                Chair
+              </h3>
+              <button class="models">Place</button>
+            </div>
+            
+            <div class="div-models">
+              <h3>
+                Vase
+              </h3>
+              <button class="models">Place</button>
+            </div>
+    
+          </div>
+          <div id="div-model-button">
+            <button id="back-model-button">Back</button>
+            <button id="url-button">Import from URL</button>   
+          </div>
+        </div>
+      </div>
+      
+      <!-- div operazioni sui modelli -->
+      <div id="div-operations">
+        <div id="container-operations">
+            <button id="back-op-button">Back</button>    
+        </div>
+        <div id="div-sca-rot-del">
+           <button id="scale-button">Scale</button>   
+           <button id="rot-button">Rotate</button>
+           <button id="move-button">Move</button>
+           <button id="delete-button">Delete</button>   
+        </div>
+      </div>
+      
+      <div id="div-url">
+        <div id="container-url">
+          <div id="div-name-url">     
+        
+            <div class="div-url-text">
+              <h3 class="h3_url">Model name</h3>
+              <textarea id="textarea_name"></textarea>
+              <h3 class="warning">Empty textarea!</h3>
+            </div>
+            
+            <div class="div-url-text">
+              <h3 class="h3_url">Model url</h3>
+              <textarea id="textarea_url"></textarea>
+              <h3 class="warning">Empty textarea!</h3>
+            </div>
+          
+          </div>
+          <div id="div-url-button">
+            <button id="done-url-button">Done</button>
+            <button id="back-url-button">Back</button>   
+          </div>
+        </div>
+        
+      </div>
+      
+    </div>
+
+    <script>      
+      
+       setTimeout(function() {
+          
+          // nascondo il bottone VR e sposto a dx quello AR
+          $('.a-enter-vr').css("visibility","hidden");
+          $(".a-enter-ar").css("right","20px");
+
+      }, 0.1 * 2000);
+      
+      
+      // Identifico la scena e i tre bottoni definiti inizialmente, ovvero quello per disegnare, quello per
+      // posizionare modelli già esistenti e il terzo per uscire
+      const scene = document.querySelector("a-scene");
+      const draw_button = document.getElementById("draw-button");
+      const model_button = document.getElementById("model-button");    
+      const exit = document.getElementById("exit-button");
+      
+      // bottoni per gestire le due modalità di disegno: quella classica che lavora solamente sulla
+      // canvas, mentre la seconda lavora tramite la rotazione dell'utente
+      const classic_mode = document.getElementById("classic-button");
+      const pinned_mode = document.getElementById("pinned-button");
+      
+      // identifico canvas e contesto 2d
+      const canvas = document.getElementById('source-canvas');
+      const drawingContext = canvas.getContext( '2d' );
+      
+      // Canvas per il test dello stile del tratto
+      const stroke_canvas = document.getElementById('stroke-canvas');
+      const strokeContext = stroke_canvas.getContext( '2d' );
+            
+      // boolean che abilita e disabilita la modalità di disegno, così da separare rotazione e disegno sulla canvas
+      var paintMode = false;
+      
+      // valore alpha per la trasparenza del tratto nella modalità Pinned
+      var alpha = 0;
+      
+      // Vettore contenente le coordinate dei punti da cui iniziare a disegnare il tratto
+      var drawStart = new THREE.Vector2();
+      
+      const hud_button = document.createElement("button");
+      hud_button.setAttribute("id","hud-button");
+            
+      // Bottoni per la gestione della canvas e del picker per il colore del tratto
+      const done_button = document.getElementById("done-button");
+      const rotate_button = document.getElementById("rotate-button");
+      const cancel_button = document.getElementById("cancel-button");
+      const back_button = document.getElementById("back-button");
+      const stroke_button = document.getElementById("stroke-button");
+      const done_picker_button = document.getElementById("done-picker-button");
+      
+      // identifico bottoni per la gestione delle operazioni di ridimensionamento, rotazione, rimozione e spostamento
+      const edit_button = document.getElementById("operation-button");
+      const back_op_button = document.getElementById("back-op-button");
+      
+      const scale_button = document.getElementById("scale-button");
+      const rot_button = document.getElementById("rot-button");
+      const delete_button = document.getElementById("delete-button");  
+      const move_button = document.getElementById("move-button");
+      
+      // I bottoni reset e done vengono usati per resettare/confermare le operazioni sui modelli eseguite
+      const reset_button = document.createElement("button");
+      reset_button.innerText ="Reset";
+      reset_button.setAttribute("id","reset-op-button");
+      
+      const done_op_button = document.createElement("button");
+      done_op_button.innerText = "Done";
+      done_op_button.setAttribute("id","done-op-button");
+      
+      // bottone per esportare la scena in formato gltf
+      const export_button = document.getElementById("export_scene");
+      
+      // bottoni per confermare ed uscire dal "dialog" per importare un modello tramite url
+      const done_url_button = document.getElementById("done-url-button");
+      const back_url_button = document.getElementById("back-url-button");
+      
+      // Bottone che funge da hint per l'utente. Gli viene detto che deve scalare con Pinch
+      const help = document.createElement("button");
+      help.setAttribute("id","help_button")
+      help.innerText = "Pinch to scale the model";
+      
+      // inizializzo il color picker per cambiare il colore del tratto
+      var colorWheel = new iro.ColorPicker("#picker", {});
+     
+      // inizialmente setto il nero come colore iniziale
+      var hex = "#000000";
+      
+      // imposto dimensione iniziale tratto
+      var width_stroke = 5;
+      
+      // Bottone uscita selezione modello      
+      const back_model_button = document.getElementById("back-model-button");   
+      
+      // bottone per importare un modello 3D tramite apposito url
+      const url_button = document.getElementById("url-button");  
+
+      // identifico il cursore per il posizionamento
+      const cursor_place = document.querySelector("[ar-hit-test]");
+      
+      // identifico camera
+      const camera = document.getElementById("camera");     
+      
+      // Vettore che conterrà la posizione nel mondo reale del dispositivo
+      var worldPos = new THREE.Vector3();
+      
+      // prendo tutti gli elementi con classe models, ovvero i bottoni per posizionare i modelli
+      var elements = document.getElementsByClassName("models");
+      
+      // creo un oggetto linea, inizialmente vuota    
+      var line = new Line();
+      
+      // vector_models è una lista che conterrà gli oggeti Line che verranno creati
+      var vector_models = [];
+      
+      // lista che conterrà degli oggetti ModelRotate, ovvero i tratti della canvas che vengono ruotati
+      var objects = [];
+      
+      // flag che attiva il disegno sulla canvas 
+      let paint = false;
+      
+      // identifico bottoni undo/redo per la canvas
+      const undo_button = document.getElementById("undo-button");
+      const redo_button = document.getElementById("redo-button");
+      
+      // lista globale che conterrà gli elementi undo/redo temporanei
+      var undo_redo_list = [];
+      
+      // la prima lista conterrà ogni tratto che viene disegnato in modalità pinned, mentre la seconda lista conterrà le 
+      // entità temporanee in base al bottone premuto undo o redo
+      var undo_redo_models = [];
+      var undo_redo_models_tmp = [];
+      
+      // contiene la dimensione dei modelli quando count = 1
+      var len_models = 0;
+      
+      // contatore usato per impostare il colore nero del tratto la prima volta che viene utilizzata l'app
+      var count_color = 0;
+      
+      // booleano che serve per distinguere le operazioni di rotazione in base a quale tasto viene
+      // premuto, se true, allora segue la rotazione classica, se è false, allora gestisce solo
+      // la creazione degli oggetti cliccando su undo ma senza eseguire alcuna rotazione
+      let b = true;
+      
+      // definisco 3 variabili che conterranno le coordinate per creare i gizmo sulla canvas che aiutano nel capire come
+      // rouotare il contenuto
+      var point_X;
+      var point_Y;
+      var point_Z;
+      
+      // booleano usato per mantenere la rotazione dei gizmo e non resettarla ogni volta che viene premuto "rotate"
+      var c = 0;
+      
+      // creo un div che conterrà i due slider nella modalità pinned per spostare il rettangolo trasparente      
+      var div_slider = document.createElement("div");
+      div_slider.setAttribute("id","div-slider");
+      
+      // inserisco il div dentro il div container sketch
+      var div_container_sketch = document.getElementById("container-sketch");
+      div_container_sketch.insertBefore(div_slider, div_container_sketch.children[2]);
+      
+      // creo due elementi H4 che conterranno le scritte per l'asse z e x che puà essere modificato tramite degli appositi slider
+      // questi elementi saranno visibili solamente nella modalità pinned
+      var hZ = document.createElement("H4");
+      hZ.setAttribute("id","hz");
+      hZ.innerHTML = "AXIS Z:";
+      
+      var hX = document.createElement("H4");
+      hX.setAttribute("id","hx");
+      hX.innerHTML = "AXIS X:";
+      
+      div_slider.appendChild(hZ);
+      div_slider.appendChild(hX);
+      
+      var slider_rotation_z = document.createElement("input");
+      slider_rotation_z.setAttribute("type","range");
+      slider_rotation_z.setAttribute("id","LineRotation");
+      slider_rotation_z.setAttribute("min","0.16");
+      slider_rotation_z.setAttribute("max","0.46");
+      slider_rotation_z.setAttribute("step","0.01")
+      slider_rotation_z.setAttribute("value","0");
+      
+      hZ.appendChild(slider_rotation_z);
+
+      var slider_rotation_x = document.createElement("input");
+      slider_rotation_x.setAttribute("type","range");
+      slider_rotation_x.setAttribute("id","LineRotationX");
+      slider_rotation_x.setAttribute("min","0");
+      slider_rotation_x.setAttribute("max","0.31");
+      slider_rotation_x.setAttribute("step","0.01")
+      slider_rotation_x.setAttribute("value","0");
+      hX.appendChild(slider_rotation_x);
+      
+      // variabile che conterrà il valore dello slider per la x
+      var tick_x = 0;
+      var tick_z = 0;
+      
+      // definisco il quaternione che conterrà la rotazione del dispositivo per poter ruotare il rettangolo trasparente
+      // della modalità pinned
+      var quaternion = new THREE.Quaternion();
+     
+      // variabile contenente la stringa della modalità in uso: classica o pinned
+      var button_name = "";  
+      
+      // variabile contenente la stringa dell'operazione scelta: Scalatura, Rotazione o Spostamento del modello
+      var b_name = "";
+      
+      // Nella modalità pinned, definisco un nuovo bottone "Draw" che mi permette di disegnare direttamente nella stanza
+      // ciò che disegno su canvas e che viene riprodotto sul rettangolo trasparente
+      const draw_button_pinned = document.createElement("button");
+      draw_button_pinned.setAttribute("id","draw_button_pinned");
+      draw_button_pinned.innerHTML = "Draw";
+      
+      // contatore per la modalità pinned, in maniera tale da creare l'entità entity_parent_pinned (che conterrà tutti i 
+      // disegni) solamente una volta
+      var c_pinned = 0;
+      
+      // contatore per cambiare nome al file per l'esportazione, così da avere un nome sempre diverso
+      var c_export = 0;
+      
+      // contatore per creare degli id incrementali ogni volta che viene disegato un modello nella modalità standard
+      var standard_model = 0;
+      
+      // contatore per creare degli id incrementali ogni volta che viene disegato un modello nella modalità pinned
+      var id_parent_pinned = 0;
+      
+      // id globale per l'entità padre "corrente"
+      var id = "";
+      
+      // variabile che conterrà il cursore per il raycast
+      var cursor = null;
+      
+      // booleno per capire quando il raycast sta intersecando un modello (true) o meno (false)
+      let intersecting = false;
+      
+      // prendo il body, e applico la libreria Hammer per utilizzare gesture come Pan e Pinch
+      var element = document.querySelector('body');
+      var hammertime = new Hammer(element);
+      
+      // varaibile contenente le dimensioni del rettangolo dell'elemento al quale viene applicato
+      // in questo caso è associato alla canvas
+      var domRect;
+      
+      // booleano che serve per rilevare quando il tratto dell'utente oltrepassa la canvas, e dunque il tratto viene interrotto
+      let exit_canvas = false;
+      
+      // Questi vettori contengono i valori x,y,z di scalatura, rotazione, posizione iniziali per eseguire poi il reset e 
+      // recuperare questi valori
+      var intial_scale = new THREE.Vector3();
+      var intial_rotate = new THREE.Vector3();
+      var intial_pos = new THREE.Vector3();   
+      var intial_pos_cursor = new THREE.Vector3();
+      
+      // definisco un entità Gizmo che conterrà 3 frecce per rappresentare le direzioni x,y,z
+      // così da dare un feedback sulla rotazione
+      var gizmo = document.createElement("a-entity");
+
+      var arrow_x = document.createElement("a-entity");
+      var arrow_y = document.createElement("a-entity");
+      var arrow_z = document.createElement("a-entity");
+      
+      // per ogni freccia, definisco colore, lunghezza e direzione
+      arrow_x.setAttribute("arrow","color: red; length: 0.15; direction: 1 0 0");
+      arrow_y.setAttribute("arrow","color: green; length: 0.15; direction: 0 1 0");
+      arrow_z.setAttribute("arrow","color: blue; length: 0.15; direction: 0 0 1");
+
+      gizmo.appendChild(arrow_x);
+      gizmo.appendChild(arrow_y);
+      gizmo.appendChild(arrow_z);
+      
+      // variabile che conterrà l'id dell'entità sulla quale viene eseguito il raycast
+      var id_ent = "";
+      
+      // questo evento gestisce il primo tocco sulla canvas
+      canvas.addEventListener('touchstart', touchStart);
+                              
+      // questo evento sulla canvas gestisce lo spostamento dello stilo/dito dell'utente
+	    canvas.addEventListener('touchmove', touchMove);
+      
+      // evento che gestisce quando l'utente alza il dito/stilo dalla canvas
+	    canvas.addEventListener('touchend', touchEnd);        
+             
+      // aggiungo l'evento click sul bottone per applicare la rotazione al disegno sulla canvas, questo per permettere all'utente
+      // di disegnare in prospettiva e non solamente in 2D
+      rotate_button.addEventListener("click", rotate_function);   
+      
+      // per ogni bottone, assegno un addEventListener per capire quale bottone è stato cliccato
+      for (var i = 0; i < elements.length; i++) {
+      elements[i].addEventListener('click', placeModel);
+      } 
+      
+      // Controllo lo stato della sessione
+      function hasDomOverlay(session) {
+        if (!session.domOverlayState) {
+          // DOM Overlay is not supported
+          return false;
+        }
+
+        if (!session.domOverlayState.type) {
+          // DOM Overlay is not in use
+          return false;
+        }
+
+        return true;
+      }
+
+      // Aggiungo l'evento sul bottone exit per uscire dalla sessione
+      exit.addEventListener("click", exitButton);
+
+      // Quando entro in modalità AR, rimuovo la classe inline dal body e la cambio in "placing-cursor", che
+      // abilita i bottoni (vedi CSS). Una volta fatto ciò, attivo anche il cursore che prima non era visibile
+      scene.addEventListener("enter-vr", () => {
+        const domOverlay = hasDomOverlay(scene.xrSession);
+        
+        document.body.classList.remove("inline");
+        
+        if (scene.is("ar-mode")) {
+          document.body.classList.add("placing-cursor");
+          cursor_place.setAttribute("ar-hit-test", "doHitTest:true");
+          cursor_place.setAttribute("visible", "true");
+          document.querySelector("body").requestFullscreen();
+        }
+      });
+
+      // Quando esco dalla modalità AR, riaggiungo la classe inline così da ottenere nuovamente la prima schermata,
+      // rimuovo dal body la classe con i due bottoni definiti e nascondo il cursore
+      scene.addEventListener("exit-vr", () => {
+     
+        document.body.classList.add("inline");
+        document.body.classList.remove("placing-cursor");
+        document.body.classList.remove("sketching");
+        cursor_place.setAttribute("ar-hit-test", "doHitTest:false");
+        cursor_place.setAttribute("visible", "false");
+        
+        // esco dallo schermo intero (messo qua sembrerebbe che non dia problemi su ipad)
+        document.exitFullscreen();
+      });
+      
+      // Aggiungo l'evento per il tap sul bottone per poter scegliere quale modalità di disegno usare: classica o pinned
+      draw_button.addEventListener("click", selectionMode);
+
+      // sull'ipad non funzionava il classico addEventListener usato in precedenza, dunque ho dovuto usare jQuery
+      $("#classic-button").on('click', StartDrawing );
+      $("#pinned-button").on('click', StartDrawing );
+
+      // Gestisco l'evento che pulisce la canvas e inizializza tutte le variabili che utilizzo
+      cancel_button.addEventListener("click", cancelButton);
+
+      // Gestisco il bottone "back", è stato aggiunto un setTimeout che fa aspettare leggermente per eseguire le
+      // operazioni all'interno così da non entrare in conflitto con la "select" del cursor place
+      back_button.addEventListener("click", backButton);
+
+      // Ogni volta che clicco il bottone "Done", creo un a-plane settando come material la canvas, come posizione quella del cursore
+      // e aggiungo anche il componente "show-in-ar-mode" che permette di visualizzare lo sketch solo nel momento in cui l'app è in Ar,
+      // altrimenti viene nascosto
+      done_button.addEventListener("click", createModel);
+                                 
+      // Quando si clicca sul bottone per posizionare un modello esistente, viene inserita la classe selection, che 
+      // permette di mostrare un div scrollable per la selezione del modello desiderato
+      model_button.addEventListener("click", modelButton);
+
+      // Torno alla schermata del cursore senza confermare alcuna scelta dalla schermata della selezione dei modelli
+      back_model_button.addEventListener("click", backModelButton);
+      
+      // gestisco il click sul bottone per importare un modello 3D tramite URL
+      url_button.addEventListener("click", urlModelButton);
+      
+      // drawPinned è il metodo per gestire la modalità pinned
+      //draw_button_pinned.addEventListener("click", drawPinned);
+      
+      // Gestisco i bottoni undo/redo. Funzionamento generale:
+      // La possibilità di eseguire undo/redo è possibile solamente quando NON è in corso la rotazione
+      // ma solamente quando si disegna      
+      undo_button.addEventListener("click", undoFunction);
+
+      // gestisco il redo
+      redo_button.addEventListener("click", redoFunction);
+      
+      // gestisco bottone per eseguire il raycast sull'entità e visualizzare le operazioni disponibili
+      edit_button.addEventListener("click", editFunction);
+      
+      // gestisco il bottone per il reset
+      reset_button.addEventListener("click", resetFunction);
+      
+      // gestisco il bottone per tornare indietro dalla modalità edit verso la "home"
+      back_op_button.addEventListener("click", backOpButton);
+      
+      // gestisco il bottone per scalare il modello
+      scale_button.addEventListener("click", scaleFunction);
+      
+      // gestisco il bottone per ruotare il modello
+      rot_button.addEventListener("click", rotFunction);
+      
+      // gestisco il bottone per spostare il modello
+      move_button.addEventListener("click", moveFunction);
+      
+      // gestisco il bottone per rimuovere l'entità
+      delete_button.addEventListener("click", deleteFunction);
+      
+      // creo un div per la conferma o meno della rimozione di un modello
+      const div_confirm = document.createElement("div");
+      div_confirm.setAttribute("id","div_confirm_delete");
+      
+      // div bottoni si/no
+      const div_b = document.createElement("div");
+      
+      // h3 del testo con la domanda
+      const text = document.createElement("h3");
+      text.innerText = "Do you want to delete this model?"
+      
+      // bottoni si/no
+      const b_yes = document.createElement("button");
+      b_yes.setAttribute("id","yes-delete");
+      b_yes.innerText = "Yes";
+      const b_no = document.createElement("button");
+      b_no.innerText = "No";  
+      b_yes.setAttribute("id","no-delete");
+      
+      // imposto le varie parentele per i div
+      div_confirm.appendChild(text);
+      div_b.appendChild(b_yes);
+      div_b.appendChild(b_no);
+      div_confirm.appendChild(div_b);
+      
+      // imposto CSS per il div
+      div_confirm.style.margin = "auto";
+      div_confirm.style.border = "solid 4px white";
+      div_confirm.style.borderRadius = "2em";
+      div_confirm.style.display = "flex";
+      div_confirm.style.flexDirection = "column";
+      div_confirm.style.alignContent = "center";
+      div_confirm.style.alignItems = "center";
+      
+      // gestisco il bottone per confermare la rimozione del modello dalla scena
+      b_yes.addEventListener("click", yesDeleteFunction);
+      
+      // gestisco il bottone per rifiutare la rimozione del modello dalla scena
+      b_no.addEventListener("click", noDeleteFunction);
+      
+      // gestisco il bottone per confermare le modifiche effettuate
+      done_op_button.addEventListener("click", doneOpButton);
+      
+      // Quando clicco sul bottone stroke color, mostro il CSS contenuto in stroke-color, ovvero il picker e lo slider
+      stroke_button.addEventListener("click", strokeButton);
+                                     
+      // Quando ho scelto il colore del tratto, clicco su done e ritorno alla schermata precedente per continuare il disegno
+      done_picker_button.addEventListener("click", donePicker); 
+      
+      // quando il bottone viene cliccato, viene eseguita la funzione hudHandler, che mostra/nasconde la canvas
+      hud_button.addEventListener("click", hudHandler);   
+      
+      // gestisco l'import di un nuovo modello nell'app tramite url
+      done_url_button.addEventListener("click", doneUrlFunction);   
+      
+      // torno alla schermata di selezione modelli da importare
+      back_url_button.addEventListener("click", backUrlFunction);   
+
+      // start listening to the color change event
+      // colorChangeCallback will be called whenever the color changes
+      colorWheel.on("color:change", colorChangeCallback);
+      
+      // gestisci lo slider per la dimensione del tratto
+      theLineWidth.addEventListener("input", lineWidthInput);    
+      
+      // slider per l'asse Z
+      LineRotation.addEventListener("input", lineRotation);   
+      
+      // slider per l'asse X
+      LineRotationX.addEventListener("input", lineRotationX);  
+
+    </script>
+    
+    <!-- apro un altro tag con tipo "module" per poter importare e usare correttamente il gltf exporter -->
+    <script type="module">
+      
+      // importo la classe GLTFExporter
+      import { GLTFExporter } from '/scripts/exporter.js';    
+      
+      // assegno l'evento al click sul bottone
+      export_button.addEventListener("click", exportButton);
+      
+      // stringa contenente il testo del file json generato
+      var content = "";
+      
+      // definisco un elemento link che conterrà l'url del file gltf per poter essere scaricato una volta creato
+      const link = document.createElement( 'a' );
+      
+      // creo il link e ci clicco sopra per scaricare il file
+      function save( blob, filename ) {
+        
+        // Se il dispositivo è Android/Windows, premendo il bottone per esportare la scena e scarico
+        // direttamente il file creando il link e cliccandoci sopra
+        if(getOS() == "Android" || getOS() == "Windows")
+        {
+            document.body.appendChild( link ); // Firefox workaround, see #6594
+            link.style.display = 'none';
+            link.download = filename;
+            link.href = URL.createObjectURL( blob ); 
+            link.click();
+        }
+        else
+        {
+          // se invece lavoro con iPad o iPhone, devo utilizzare il navigator per salvare/condividere il file
+          if(getOS() == "Mac OS" || getOS() == "iOS")
+          {
+            var file = new File([blob], filename, {type: "text/plain",});
+            navigator.share({text: content, files: [file]});
+          }
+        }
+			}
+      
+      // salvataggio formato glb binario
+      function saveArrayBuffer( buffer, filename )
+      {
+			  save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+      }
+      // salvataggio formato gltf standard
+      function saveString( text, filename )
+      {
+				save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+      }
+      
+      // funzione per esportare la scena
+      function exportButton()
+      {        
+        // creo un nuovo exporter dalla classe importata
+        var gltfExporter = new GLTFExporter();
+        
+        c_export++;
+        
+        var name = "scene_"+c_export+".gltf.txt";
+        console.log(name);
+      
+      
+        // Passo come primo parameto l'oggetto che voglio esportare, in questo caso passo tutta la scena
+        gltfExporter.parse( scene.object3D, function ( result ) {
+          
+        // creo il file gltf o gbl in base al parametro binary
+            if ( result instanceof ArrayBuffer ) {
+
+              saveArrayBuffer( result, 'scene.glb' );
+
+            } else {
+              // devo necessariamente esportare un file txt per poterlo salvare e condividere
+              const output = JSON.stringify( result, null, 2 );
+              console.log( output );
+              content = output;
+              //saveString( output, 'scene.gltf.txt' );
+              saveString( output, name );
+            }          
+				},{binary:false});      
+        
+      }     
+    
+    </script>
+      
+  </body>
+</html>
